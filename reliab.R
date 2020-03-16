@@ -9,8 +9,12 @@
 # Reijo Sund (ORCID: 0000-0002-6268-8117), https://connect.uef.fi/en/reijo.sund
 #
 ###############################################################################
-source("reli-fun.R")
 
+#install.packages(c("dplyr","MASS"))
+library(dplyr)
+library(MASS)
+
+source("reli-fun.R")
 source("data.R")
 
 # DECA: Measuring the physical capacity by decathlon scores
@@ -143,7 +147,17 @@ B <- matrix(
   ncol=2
 )
 
-source("prep-true.R")
+colnames(B) <- paste0("Image",1:ncol(B))
+rownames(B) <- paste0("Item",1:nrow(B))
+M <- rep(0,each=nrow(B))
+SD <- rep(1,each=nrow(B))
+R <- B %*% t(B) + (diag(nrow(B)) - diag(diag(B %*% t(B))))
+r1 <- as.data.frame(reli(R,B,M=SD,sum=TRUE,scores=FALSE))
+W <- solve(R) %*% B     # Weights for factor scores (orthogonal factors)
+colnames(W) <- paste0("Score",1:ncol(W))
+r2 <- as.data.frame(reli(R,B,W,M=SD))
+r1$lab <- rownames(r1)
+r2$lab <- rownames(r2)
 
 # True values for factor images
 print(t(r1))
@@ -162,8 +176,8 @@ sim <- rlbsimul(M,SD,R,B,n,50,2)
 # True values of reliabilities and means of 50 sample estimates
 # Table 6.3
 
+
 # Factor Images
-library(dplyr)
 
 #True
 print(t(r1))
