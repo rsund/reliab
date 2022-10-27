@@ -1,0 +1,58 @@
+---
+title: "R-replication of DECA analysis presented in Vehkalahti 2000, chapter 5.1"
+author: "Reijo Sund"
+date: "2022-10-27"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Loading the reli-functions and data first
+
+```{r load_data}
+source("reli-fun.R")
+source("data.R")
+```
+
+## ulating the correlation matrix, means and standard deviations
+
+```{r}
+D <- deca[,3:12]
+R <- cor(D)
+M <- cbind(mean=sapply(D, mean), stddev=sapply(D, sd))
+```
+
+## Factor analysis with varimax rotation (and ortogonal target rotation to Survo results)
+
+```{r}
+A <- factanal(D, factors=5, rotation="varimax")$loadings[]
+B <- GPArotation::targetT(A, Target=decaB)$loadings[]
+```
+
+## Computing the factor score weights
+
+```{r}
+W <- solve(R) %*% B     # Weights for factor scores (orthogonal factors)
+#W <- solve(R) %*% B %*% O       # Weights for factor scores (correlated factors)
+colnames(W) <- paste0("Score",1:ncol(W))
+```
+
+
+## Reliabilities of the factor images and the unweighted sum of DECA
+
+```{r}
+reli(decaR,decaB,M=decaM[,"stddev"],sum=TRUE,scores=FALSE)
+reli(R,B,M=M[,"stddev"],sum=TRUE,scores=FALSE)
+```
+
+
+## Reliabilities of the factor scores of DECA
+
+```{r}
+reli(decaR,decaB,decaW,M=decaM[,"stddev"])
+reli(R,B,W,M=M[,"stddev"])
+```
+
+
